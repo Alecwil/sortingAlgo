@@ -20,6 +20,11 @@ double Heap_sort(int* arr, int n); //tgian heapsort
 unsigned long long   Heap_sort_Comparison(int* arr, int n);
 double BubbleSort(int* arr, int n); //tgian bubblesort
 unsigned long long  BubbleSort_Comparison(int* arr, int n);
+//------------------
+
+double countingSortRT(int* arr, int n);
+unsigned long long countingSortCMP(int* arr, int n);
+
 
 //------------------
 double getTime(int* arr, int n); //tgian radixsort

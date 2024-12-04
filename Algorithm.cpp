@@ -4,9 +4,11 @@
 #include <time.h>
 #include <sstream>
 #include <string>
-
+#include<algorithm>
 #include "Header.h"
 #include <chrono>
+#include <string.h>
+#include <vector>
 using namespace std::chrono;
 using namespace std;
 
@@ -147,84 +149,83 @@ long double timeSelectionSort(int* a, int n) {
 
 //Quick Sort
 
+int MedianOfThree(int* a, int left, int right) {
+    int mid = left + (right - left) / 2;
+    if (a[left] > a[mid]) Swap(a[left], a[mid]);
+    if (a[left] > a[right]) Swap(a[left], a[right]);
+    if (a[mid] > a[right]) Swap(a[mid], a[right]);
+    return mid;
+}
+
 int Partition(int* a, int left, int right) {
-
-	int pivot = a[left];
-
-	int count = 0;
-	for (int i = left + 1; i <= right; i++) {
-		if (a[i] <= pivot)
-			count++;
-	}
-
-	int pivotIndex = left + count;
-	Swap(a[pivotIndex], a[left]);
-
-	int i = left;
-	int j = right;
-	while (i < pivotIndex && j > pivotIndex) {
-
-		while (a[i] <= pivot) i++;
-
-		while (a[j] > pivot) j--;
-
-		if (i < pivotIndex && j > pivotIndex)
-			Swap(a[i++], a[j--]);
-	}
-
-	return pivotIndex;
+    int pivotIndex = MedianOfThree(a, left, right);
+    Swap(a[pivotIndex], a[right]); // Move pivot to the end
+    int pivot = a[right];
+    int i = left - 1;
+    for (int j = left; j < right; j++) {
+        if (a[j] <= pivot) {
+            i++;
+            Swap(a[i], a[j]);
+        }
+    }
+    Swap(a[i + 1], a[right]); // Place pivot in correct position
+    return i + 1;
 }
 
 void quickSort(int* a, int left, int right) {
-	if (left < right)
-	{
-		int p = Partition(a, left, right);
-		quickSort(a, left, p - 1);
-		quickSort(a, p + 1, right);
-	}
+    while (left < right) {
+        int pivot = Partition(a, left, right);
+        if (pivot - left < right - pivot) {
+            quickSort(a, left, pivot - 1);
+            left = pivot + 1; // Tail call optimization
+        } else {
+            quickSort(a, pivot + 1, right);
+            right = pivot - 1; // Tail call optimization
+        }
+    }
 }
+
 
 int countPartition(int* a, int left, int right, unsigned long long& countCompQuickSort) {
+    int pivot = a[left];
+    int i = left + 1;
+    int j = right;
 
-	int pivot = a[left];
-
-	int count = 0;
-	for (int i = left + 1; (++countCompQuickSort) && (i <= right); i++) {
-		if ((++countCompQuickSort) && (a[i] <= pivot))
-			count++;
-	}
-
-	int pivotIndex = left + count;
-	Swap(a[pivotIndex], a[left]);
-
-	int i = left;
-	int j = right;
-	while (((++countCompQuickSort) && (i < pivotIndex)) && ((++countCompQuickSort) && (j > pivotIndex))) {
-
-		while ((++countCompQuickSort) && (a[i] <= pivot)) i++;
-
-		while ((++countCompQuickSort) && (a[j] > pivot)) j--;
-
-		if (((++countCompQuickSort) && (i < pivotIndex)) && ((++countCompQuickSort) && (j > pivotIndex)))
-			Swap(a[i++], a[j--]);
-	}
-
-	return pivotIndex;
+    while (i <= j) {
+        // Increment comparisons only when a condition is checked
+        while ((++countCompQuickSort) && (i <= right) && (a[i] <= pivot)) {
+            i++;
+        }
+        while ((++countCompQuickSort) && (j >= left) && (a[j] > pivot)) {
+            j--;
+        }
+        if (i < j) {
+            Swap(a[i], a[j]);
+            i++;
+            j--;
+        }
+    }
+    Swap(a[left], a[j]); // Place pivot at the correct position
+    return j; // Return the pivot index
 }
+
+
+
 
 unsigned long long countQuickSort(int* a, int left, int right) {
+    unsigned long long countCompQuickSort = 0;
 
-	static unsigned long long countCompQuickSort = 0;
+    if (left < right) {
+        int p = countPartition(a, left, right, countCompQuickSort);
 
-	if ((++countCompQuickSort) && (left < right)) {
-
-		int p = countPartition(a, left, right, countCompQuickSort);
-		countQuickSort(a, left, p - 1);
-		countQuickSort(a, p + 1, right);
-	}
-
-	return countCompQuickSort;
+        // Recursively count comparisons in left and right partitions
+        countCompQuickSort += countQuickSort(a, left, p - 1);
+        countCompQuickSort += countQuickSort(a, p + 1, right);
+    }
+    return countCompQuickSort;
 }
+
+
 
 long double timeQuickSort(int* a, int left, int right) {
 
@@ -660,6 +661,60 @@ int Counting(int* arr, int n) {
 
 //----------------------------------
 
+double countingSortRT(int* arr, int n) {
+    auto start = chrono::high_resolution_clock::now();
+
+    int maxElement = *max_element(arr, arr + n);
+    int minElement = *min_element(arr, arr + n);
+    int range = maxElement - minElement + 1;
+
+    vector<int> count(range, 0);
+    vector<int> output(n);
+
+    for (int i = 0; i < n; ++i)
+        count[arr[i] - minElement]++;
+
+    for (int i = 1; i < range; ++i)
+        count[i] += count[i - 1];
+
+    for (int i = n - 1; i >= 0; --i) {
+        output[count[arr[i] - minElement] - 1] = arr[i];
+        count[arr[i] - minElement]--;
+    }
+
+    for (int i = 0; i < n; ++i)
+        arr[i] = output[i];
+
+    auto end = chrono::high_resolution_clock::now();
+    chrono::duration<double, milli> time = end - start;
+    return time.count();
+}
+unsigned long long countingSortCMP(int* arr, int n) {
+    unsigned long long comparisons = 0;
+
+    int maxElement = *max_element(arr, arr + n);
+    int minElement = *min_element(arr, arr + n);
+    int range = maxElement - minElement + 1;
+
+    vector<int> count(range, 0);
+    vector<int> output(n);
+
+    for (int i = 0; (++comparisons) && i < n; ++i)
+        count[arr[i] - minElement]++;
+
+    for (int i = 1; (++comparisons) && i < range; ++i)
+        count[i] += count[i - 1];
+
+    for (int i = n - 1; (++comparisons) && i >= 0; --i) {
+        output[count[arr[i] - minElement] - 1] = arr[i];
+        count[arr[i] - minElement]--;
+    }
+
+    return comparisons;
+}
+
+//--------------------------
+
 void Print_file_Input(string File_in, int* arr, int n)
 {
 	ofstream Fout;
@@ -708,6 +763,11 @@ char Xac_Dinh_Thuat_Toan(char* algorithm)
 	if (k != NULL)
 	{
 		return 'r';
+	}
+	k = strstr(algorithm, "counting");
+	if (k != NULL)
+	{
+		return 'c';
 	}
 	return 'e';
 }
@@ -926,6 +986,27 @@ void Cout_consolve(char algorithm, int para, int* arr, int n)
 		}
 		break;
 	}
+	case 'c': {
+    switch (para) {
+        case 1: {
+            cout << "Running Time: " << countingSortRT(arr, n) << " ms\n";
+            break;
+        }
+        case 2: {
+            cout << "Comparisons: " << countingSortCMP(arr, n) << endl;
+            break;
+        }
+        case 3: {
+            int* arr2 = Copy_Array(arr, n);
+            cout << "Running Time: " << countingSortRT(arr, n) << " ms\n";
+            cout << "Comparisons: " << countingSortCMP(arr2, n) << endl;
+            delete[] arr2;
+            break;
+        }
+    }
+    break;
+	}
+
 	case 'e':
 	{
 		cout << "false";
@@ -947,7 +1028,7 @@ int strcompare(const string a, const string b)
 }
 void printInfo1(string ss1, string ss2, string ss3, int* a, int n) {
 	string selection_sort = "selection-sort", quick_sort = "quick-sort", insertion_sort = "insertion-sort", merge_sort = "merge-sort",
-		heap_sort = "heap-sort", bubble_sort = "bubble-sort", radix_sort = "radix-sort";
+		heap_sort = "heap-sort", bubble_sort = "bubble-sort", radix_sort = "radix-sort", counting_sort = "counting-sort";
 	string time = "-time", comparsion = "-comp", both = "-both";
 
 	if (strcompare(ss1, selection_sort) == 1) {
@@ -1070,6 +1151,23 @@ void printInfo1(string ss1, string ss2, string ss3, int* a, int n) {
 		}
 		else cout << "Wrong input!!" << endl;
 	}
+	else if (strcompare(ss1, counting_sort) == 1) {
+		cout << "Algorithm: Counting Sort" << endl;
+		cout << "Input file: " << ss2 << endl;
+		cout << "Input size: " << n << endl;
+		cout << "----------------------------------------" << endl;
+		if (strcompare(ss3, time)) {
+			cout << "Running time: " << countingSortRT(a,n) << " ms" << endl;
+		}
+		else if (strcompare(ss3, comparsion)) {
+			cout << "Comparisons: " << countingSortCMP(a,n) << endl;
+		}
+		else if (strcompare(ss3, both)) {
+			cout << "Running time: " << countingSortRT(a,n) << " ms" << endl;
+			cout << "Comparisons: " << countingSortCMP(a,n) << endl;
+		}
+		else cout << "Wrong input!!" << endl;
+	}
 	else cout << "Wrong input!!" << endl;
 }
 int command1(int argc, char* argv[]) {
@@ -1110,7 +1208,7 @@ int command1(int argc, char* argv[]) {
 }
 void printInfo2(string ss1, string ss2, string ss3, int* a, int n) {
 	string selection_sort = "selection-sort", quick_sort = "quick-sort", insertion_sort = "insertion-sort", merge_sort = "merge-sort",
-		heap_sort = "heap-sort", bubble_sort = "bubble-sort", radix_sort = "radix-sort";
+		heap_sort = "heap-sort", bubble_sort = "bubble-sort", radix_sort = "radix-sort", counting_sort = "counting-sort";
 	string time = "-time", comparsion = "-comp", both = "-both";
 	string order;
 	if (strcompare(ss2, "-rand")) {
@@ -1246,6 +1344,24 @@ void printInfo2(string ss1, string ss2, string ss3, int* a, int n) {
 		}
 		else cout << "Wrong input!!" << endl;
 	}
+	else if (strcompare(ss1, counting_sort) == 1) {
+		cout << "Algorithm: Counting Sort" << endl;
+		cout << "Input size: " << n << endl;
+		cout << "Input order: " << order << endl;
+		cout << "----------------------------------------" << endl;
+		if (strcompare(ss3, time)) {
+			cout << "Running time: " << countingSortRT(a, n) << " ms" << endl;
+		}
+		else if (strcompare(ss3, comparsion)) {
+			cout << "Comparisons: " << countingSortCMP(a, n) << endl;
+		}
+		else if (strcompare(ss3, both)) {
+			cout << "Running time: " << countingSortRT(a, n) << " ms" << endl;
+			cout << "Comparisons: " << countingSortCMP(a, n) << endl;
+		}
+		else cout << "Wrong input!!" << endl;
+	}
+
 	else cout << "Wrong input!!" << endl;
 }
 int command2(int argc, char* argv[]) {

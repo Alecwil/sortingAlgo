@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <string>
 #include "Header.h"
+#include <string.h>
 using namespace std;
 
 
@@ -165,6 +166,8 @@ int main(int argc, char* argv[]) {
 					cout << fixed << setprecision(4) << timeQuickSort(aTemp, 0, inputSize - 1) << " ms";
 				else if (strcmp(argv[i + 2], "radix-sort") == 0)
 					cout << fixed << setprecision(4) << getTime(aTemp, inputSize) << " ms";
+				else if (strcmp(argv[i + 2], "counting-sort") == 0)
+					cout << fixed << setprecision(4) << countingSortRT(aTemp, inputSize) << " ms";
 				else
 					cout << "Algorithm doesn't exist";
 
@@ -194,6 +197,8 @@ int main(int argc, char* argv[]) {
 					cout << countQuickSort(aTemp, 0, inputSize - 1);
 				else if (strcmp(argv[i + 2], "radix-sort") == 0)
 					cout << Counting(aTemp, inputSize);
+				else if (strcmp(argv[i + 2], "counting-sort") == 0)
+					cout << countingSortCMP(aTemp, inputSize);
 				else
 					cout << "Algorithm doesn't exist";
 
@@ -294,6 +299,8 @@ int main(int argc, char* argv[]) {
 					cout << fixed << setprecision(4) << timeQuickSort(aTemp, 0, inputSize - 1) << " ms";
 				else if (strcmp(argv[i + 2], "radix-sort") == 0)
 					cout << fixed << setprecision(4) << getTime(aTemp, inputSize) << " ms";
+				else if (strcmp(argv[i + 2], "counting-sort") == 0)
+					cout << fixed << setprecision(4) << countingSortRT(aTemp, inputSize) << " ms";
 				else
 					cout << "Algorithm doesn't exist";
 
@@ -325,6 +332,8 @@ int main(int argc, char* argv[]) {
 					cout << countQuickSort(aTemp, 0, inputSize - 1);
 				else if (strcmp(argv[i + 2], "radix-sort") == 0)
 					cout << Counting(aTemp, inputSize);
+				else if (strcmp(argv[i + 2], "counting-sort") == 0)
+					cout << countingSortCMP(aTemp, inputSize);
 				else
 					cout << "Algorithm doesn't exist";
 
